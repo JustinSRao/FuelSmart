@@ -1,0 +1,40 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // JSON parsing library
+    implementation 'com.google.code.gson:gson:2.10'
+
+    // HTTP client for making API requests
+    implementation 'org.apache.httpcomponents.client5:httpclient5:5.2'
+
+    // Lombok for easier coding (optional)
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+
+    // Testing dependencies (if needed)
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:3.1.2'
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+application {
+    mainClass = 'fuelsmart.FuelSmart'
+}
+
+test {
+    useJUnitPlatform()
+}
