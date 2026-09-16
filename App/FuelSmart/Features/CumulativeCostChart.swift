@@ -53,11 +53,18 @@ struct CumulativeCostChartModel {
         if let crossing = result.breakEven.month { indices.insert(crossing) }
         let sampled = indices.sorted()
 
-        self.pointsA = sampled.map {
-            Point(month: $0, cost: result.sideA.cost(atMonth: $0), seriesName: nameA, isAccented: false)
+        // Bound to locals first: referencing a stored property inside these
+        // closures would capture `self` before initialisation is complete.
+        let seriesNameA = result.sideA.vehicle.shortDisplayName
+        let seriesNameB = result.sideB.vehicle.shortDisplayName
+        let sideA = result.sideA
+        let sideB = result.sideB
+
+        self.pointsA = sampled.map { month in
+            Point(month: month, cost: sideA.cost(atMonth: month), seriesName: seriesNameA, isAccented: false)
         }
-        self.pointsB = sampled.map {
-            Point(month: $0, cost: result.sideB.cost(atMonth: $0), seriesName: nameB, isAccented: true)
+        self.pointsB = sampled.map { month in
+            Point(month: month, cost: sideB.cost(atMonth: month), seriesName: seriesNameB, isAccented: true)
         }
         self.maxCost = max(
             result.sideA.cost(atMonth: maxMonth),
