@@ -129,7 +129,7 @@ public enum ComparisonImporter {
         for comparison in document.comparisons {
             switch sanitise(comparison) {
             case .success(let clean): accepted.append(clean)
-            case .failure(let reason): reasons.append(reason)
+            case .failure(let failure): reasons.append(failure.reason)
             }
         }
 
@@ -137,8 +137,16 @@ public enum ComparisonImporter {
         return accepted
     }
 
+    /// Why one comparison in an imported file could not be used.
+    ///
+    /// A named error type rather than a bare `String`: `Result`'s failure type
+    /// must conform to `Error`, and the reason is surfaced to the user verbatim.
+    struct SanitisationFailure: Error {
+        let reason: String
+    }
+
     /// Repair what can be repaired; reject what cannot.
-    private static func sanitise(_ comparison: SavedComparison) -> Result<SavedComparison, String> {
+    private static func sanitise(_ comparison: SavedComparison) -> Result<SavedComparison, SanitisationFailure> {
         var clean = comparison
         let label = comparison.name.isEmpty ? "an unnamed comparison" : "\"\(comparison.name)\""
 
@@ -161,27 +169,27 @@ public enum ComparisonImporter {
         ] + clean.scenario.energyPrices.chargingSources.map(\.pricePerKWh)
 
         guard numbers.allSatisfy({ $0.isFinite }) else {
-            return .failure("\(label) contains an invalid number")
+            return .failure(SanitisationFailure(reason: "\(label) contains an invalid number"))
         }
         guard numbers.allSatisfy({ $0 >= 0 }) else {
-            return .failure("\(label) contains a negative price or distance")
+            return .failure(SanitisationFailure(reason: "\(label) contains a negative price or distance"))
         }
         guard clean.scenario.sideA.acquisition.purchasePrice <= ScenarioValidator.maximumPlausiblePrice,
               clean.scenario.sideB.acquisition.purchasePrice <= ScenarioValidator.maximumPlausiblePrice else {
-            return .failure("\(label) contains a price outside the supported range")
+            return .failure(SanitisationFailure(reason: "\(label) contains a price outside the supported range"))
         }
         guard clean.scenario.horizon.months_ > 0 else {
-            return .failure("\(label) has no ownership period")
+            return .failure(SanitisationFailure(reason: "\(label) has no ownership period"))
         }
         // Guard against a hostile or corrupt file asking for a simulation so
         // long it would exhaust memory.
         guard clean.scenario.horizon.months_ <= 1_200 else {
-            return .failure("\(label) has an ownership period longer than 100 years")
+            return .failure(SanitisationFailure(reason: "\(label) has an ownership period longer than 100 years"))
         }
 
         for (identifier, side) in [(ComparisonSideIdentifier.a, clean.scenario.sideA), (.b, clean.scenario.sideB)] {
             if side.vehicle.make.isEmpty && side.vehicle.model.isEmpty {
-                return .failure("\(label) is missing vehicle \(identifier.rawValue.uppercased())")
+                return .failure(SanitisationFailure(reason: "\(label) is missing vehicle \(identifier.rawValue.uppercased())"))
             }
         }
 

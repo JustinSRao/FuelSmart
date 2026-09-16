@@ -20,8 +20,14 @@ let package = Package(
         .target(
             name: "FuelSmartCore",
             swiftSettings: [
+                // ExistentialAny requires `any` on every existential, which the
+                // sources already use.
+                //
+                // InternalImportsByDefault is deliberately NOT enabled: it makes
+                // `import Foundation` internal, and this package's public API is
+                // built from Foundation types (Date, UUID, Bundle, URL), so every
+                // public signature would be rejected.
                 .enableUpcomingFeature("ExistentialAny"),
-                .enableUpcomingFeature("InternalImportsByDefault"),
             ]
         ),
         .testTarget(
