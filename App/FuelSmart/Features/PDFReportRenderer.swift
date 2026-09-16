@@ -307,13 +307,6 @@ private struct PDFCurveChart: View {
             let maxCost = max(model.maxCost, 1)
             let maxMonth = max(Double(model.maxMonth), 1)
 
-            func point(_ p: CumulativeCostChartModel.Point) -> CGPoint {
-                CGPoint(
-                    x: Double(p.month) / maxMonth * width,
-                    y: height - (p.cost / maxCost) * height
-                )
-            }
-
             ZStack {
                 // Grid.
                 ForEach(0..<4, id: \.self) { index in
@@ -322,8 +315,10 @@ private struct PDFCurveChart: View {
                         .stroke(Nocturne.Neutral.n200, lineWidth: 0.75)
                 }
 
-                curve(model.pointsA.map(point)).stroke(Nocturne.Neutral.n600, lineWidth: 2)
-                curve(model.pointsB.map(point)).stroke(Nocturne.Accent.a600, lineWidth: 2)
+                curve(scaled(model.pointsA, width: width, height: height))
+                    .stroke(Nocturne.Neutral.n600, lineWidth: 2)
+                curve(scaled(model.pointsB, width: width, height: height))
+                    .stroke(Nocturne.Accent.a600, lineWidth: 2)
 
                 if let month = model.breakEvenMonth, let cost = model.breakEvenCost {
                     let x = Double(month) / maxMonth * width
@@ -334,6 +329,25 @@ private struct PDFCurveChart: View {
                         .position(x: x, y: y)
                 }
             }
+        }
+    }
+
+    /// Project the model's points into the drawing rect.
+    ///
+    /// A method rather than a local function: ViewBuilder closures cannot
+    /// contain declarations.
+    private func scaled(
+        _ points: [CumulativeCostChartModel.Point],
+        width: CGFloat,
+        height: CGFloat
+    ) -> [CGPoint] {
+        let maxCost = max(model.maxCost, 1)
+        let maxMonth = max(Double(model.maxMonth), 1)
+        return points.map { point in
+            CGPoint(
+                x: Double(point.month) / maxMonth * width,
+                y: height - (point.cost / maxCost) * height
+            )
         }
     }
 

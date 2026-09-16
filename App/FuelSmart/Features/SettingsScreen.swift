@@ -80,9 +80,11 @@ struct SettingsScreen: View {
                 value: formatter.fuelPrice(settings.gasolinePricePerLitre),
                 binding: Binding(
                     get: { UnitConversionService.fuelPriceFromPerLitre(settings.gasolinePricePerLitre, region: settings.region) },
-                    set: { model.settingsStore.update { s in
-                        s.gasolinePricePerLitre = UnitConversionService.fuelPriceToPerLitre($0, region: s.region)
-                    } }
+                    set: { newValue in
+                        model.settingsStore.update { s in
+                            s.gasolinePricePerLitre = UnitConversionService.fuelPriceToPerLitre(newValue, region: s.region)
+                        }
+                    }
                 ),
                 unit: settings.region == .canada ? "/ L" : "/ gal"
             )
@@ -92,9 +94,11 @@ struct SettingsScreen: View {
                 value: formatter.fuelPrice(settings.dieselPricePerLitre),
                 binding: Binding(
                     get: { UnitConversionService.fuelPriceFromPerLitre(settings.dieselPricePerLitre, region: settings.region) },
-                    set: { model.settingsStore.update { s in
-                        s.dieselPricePerLitre = UnitConversionService.fuelPriceToPerLitre($0, region: s.region)
-                    } }
+                    set: { newValue in
+                        model.settingsStore.update { s in
+                            s.dieselPricePerLitre = UnitConversionService.fuelPriceToPerLitre(newValue, region: s.region)
+                        }
+                    }
                 ),
                 unit: settings.region == .canada ? "/ L" : "/ gal"
             )
