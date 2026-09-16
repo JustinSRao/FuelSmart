@@ -71,7 +71,16 @@ struct RootView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     #endif
 
-    @State private var selection: AppSection = .home
+    // Optional because `List(_:selection:rowContent:)` with a non-optional
+    // binding is macOS-only; a sidebar selection is conventionally optional
+    // anyway, since nothing need be selected.
+    @State private var selection: AppSection? = .home
+
+    /// TabView wants a non-optional selection, so the optional is bridged here
+    /// rather than keeping two pieces of state that could disagree.
+    private var tabSelection: Binding<AppSection> {
+        Binding(get: { selection ?? .home }, set: { selection = $0 })
+    }
 
     private var theme: FSTheme { model.theme(for: colorScheme) }
 
@@ -109,7 +118,7 @@ struct RootView: View {
     // MARK: - iPhone
 
     private var tabs: some View {
-        TabView(selection: $selection) {
+        TabView(selection: tabSelection) {
             ForEach(AppSection.allCases) { section in
                 NavigationStack {
                     screen(for: section)
@@ -143,7 +152,7 @@ struct RootView: View {
             #endif
         } detail: {
             NavigationStack {
-                screen(for: selection)
+                screen(for: selection ?? .home)
             }
         }
     }
