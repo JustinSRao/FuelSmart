@@ -30,6 +30,7 @@ the better financial choice. It shows the mathematics and lets you decide.
 | Python pipeline tests | **Passing** — 36/36 |
 | Swift engine tests | **Passing** — 89/89 across 7 suites |
 | App build | **Compiles on iOS and macOS** in CI |
+| UI critical path | **Passing** — 6/6 on a simulator |
 
 > ### Build environment note
 >
@@ -45,6 +46,13 @@ the better financial choice. It shows the mathematics and lets you decide.
 > | App build, iOS | compiles |
 > | App build, macOS | compiles |
 > | Data pipeline | 36/36 tests passing |
+> | UI critical path | 6/6 passing on a simulator |
+>
+> The UI suite drives the real app end to end: launch, pick two vehicles from
+> the bundled dataset, read the result and chart, save, and reopen. Its passing
+> confirms on-device behaviour that cannot be checked any other way — notably
+> that the 13 MB vehicle database decodes and the prefix search index answers a
+> query fast enough to be usable.
 >
 > The first CI run surfaced ~400 errors from a single cause — the
 > `InternalImportsByDefault` upcoming feature, which makes `import Foundation`
