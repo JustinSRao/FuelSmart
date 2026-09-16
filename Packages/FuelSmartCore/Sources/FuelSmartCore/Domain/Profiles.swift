@@ -281,13 +281,20 @@ public struct RecurringCostProfile: Codable, Sendable, Hashable {
     /// True when the user supplied at least one figure. Drives whether the
     /// result is called "Purchase + energy" or "Estimated ownership cost".
     public var isEnabled: Bool {
-        [annualInsurance, annualMaintenance, annualRegistration, annualParking, annualOther]
-            .contains { $0 != nil }
+        allValues.contains { $0 != nil }
     }
 
     public var annualTotal: Double {
-        (annualInsurance ?? 0) + (annualMaintenance ?? 0) + (annualRegistration ?? 0)
-            + (annualParking ?? 0) + (annualOther ?? 0)
+        // Summed by reduce rather than as one long `??` chain: five coalescing
+        // operators in a single arithmetic expression exceeds what the Swift
+        // expression type-checker will solve in reasonable time.
+        allValues.reduce(0) { $0 + ($1 ?? 0) }
+    }
+
+    /// Every optional field, in one place, so `isEnabled` and `annualTotal`
+    /// cannot fall out of step as fields are added.
+    private var allValues: [Double?] {
+        [annualInsurance, annualMaintenance, annualRegistration, annualParking, annualOther]
     }
 
     public static let empty = RecurringCostProfile()
