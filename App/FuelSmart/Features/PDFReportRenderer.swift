@@ -27,7 +27,7 @@ enum PDFReportRenderer {
 
     /// Render and write to a temporary file, returning its URL for sharing.
     @MainActor
-    static func render(result: ComparisonResult, includePrices: Bool) throws -> URL {
+    static func render(result: FuelSmartCore.ComparisonResult, includePrices: Bool) throws -> URL {
         let filename = suggestedFilename(for: result)
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
 
@@ -69,7 +69,7 @@ enum PDFReportRenderer {
         return url
     }
 
-    static func suggestedFilename(for result: ComparisonResult) -> String {
+    static func suggestedFilename(for result: FuelSmartCore.ComparisonResult) -> String {
         let names = "\(result.sideA.vehicle.shortDisplayName)-vs-\(result.sideB.vehicle.shortDisplayName)"
         let safe = names
             .components(separatedBy: CharacterSet.alphanumerics.inverted)
@@ -89,7 +89,7 @@ enum PDFReportRenderer {
 /// the foot so the sheet stands on its own.
 struct PDFReportPage: View {
 
-    let result: ComparisonResult
+    let result: FuelSmartCore.ComparisonResult
     var includePrices: Bool
 
     @Environment(\.fsTheme) private var theme

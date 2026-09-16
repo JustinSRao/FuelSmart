@@ -5,7 +5,7 @@ import FuelSmartCore
 /// Energy, upfront and the full category breakdown.
 struct CostDetailScreen: View {
 
-    let result: ComparisonResult
+    let result: FuelSmartCore.ComparisonResult
 
     @Environment(\.fsTheme) private var theme
 

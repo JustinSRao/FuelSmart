@@ -14,7 +14,7 @@ import AppKit
 /// the user chooses the destination through the system share sheet.
 struct ShareScreen: View {
 
-    let result: ComparisonResult
+    let result: FuelSmartCore.ComparisonResult
 
     @Environment(\.fsTheme) private var theme
     @Environment(\.dismiss) private var dismiss
@@ -164,7 +164,7 @@ struct ShareScreen: View {
 /// them.
 struct ShareCardView: View {
 
-    let result: ComparisonResult
+    let result: FuelSmartCore.ComparisonResult
     var includeAssumptions: Bool = true
     var includePrices: Bool = false
 

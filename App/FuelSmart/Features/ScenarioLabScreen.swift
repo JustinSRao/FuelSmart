@@ -95,7 +95,7 @@ struct ScenarioLabScreen: View {
         return updated
     }
 
-    private var result: ComparisonResult {
+    private var result: FuelSmartCore.ComparisonResult {
         engine.evaluate(adjustedScenario, dataSources: dataSources)
     }
 
@@ -147,7 +147,7 @@ struct ScenarioLabScreen: View {
 
     // MARK: - Preview
 
-    private func previewCard(_ result: ComparisonResult) -> some View {
+    private func previewCard(_ result: FuelSmartCore.ComparisonResult) -> some View {
         FSCard(elevation: .medium) {
             VStack(alignment: .leading, spacing: 12) {
                 miniChart(result)
@@ -183,7 +183,7 @@ struct ScenarioLabScreen: View {
 
     /// A compact, non-interactive version of the main chart — same series
     /// colours, same rules, no scrubbing.
-    private func miniChart(_ result: ComparisonResult) -> some View {
+    private func miniChart(_ result: FuelSmartCore.ComparisonResult) -> some View {
         let model = CumulativeCostChartModel(result: result, sampleStride: 3)
         return Chart {
             ForEach(model.pointsA) { point in

@@ -33,7 +33,7 @@ struct CumulativeCostChartModel {
     private let resultB: SideResult
     private let annualKilometres: Double
 
-    init(result: ComparisonResult, sampleStride: Int = 1) {
+    init(result: FuelSmartCore.ComparisonResult, sampleStride: Int = 1) {
         let months = min(result.sideA.cumulativePoints.count, result.sideB.cumulativePoints.count) - 1
         self.maxMonth = max(months, 1)
         self.horizonMonths = min(result.horizonMonths, maxMonth)

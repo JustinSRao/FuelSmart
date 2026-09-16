@@ -134,11 +134,15 @@ final class VehicleBookmarkEntity {
 
 enum PersistenceController {
 
-    static let schema = Schema([
-        SavedComparisonEntity.self,
-        CachedVINEntity.self,
-        VehicleBookmarkEntity.self,
-    ])
+    // Computed rather than a stored `static let`: Schema is not Sendable, so a
+    // shared static instance is rejected under strict concurrency checking.
+    static var schema: Schema {
+        Schema([
+            SavedComparisonEntity.self,
+            CachedVINEntity.self,
+            VehicleBookmarkEntity.self,
+        ])
+    }
 
     /// The on-device store. No CloudKit, no account, no sync — comparisons stay
     /// on the device that made them.

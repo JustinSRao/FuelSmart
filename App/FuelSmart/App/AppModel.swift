@@ -234,7 +234,7 @@ final class ComparisonDraft {
     /// a 120-month simulation of two vehicles is a few thousand additions —
     /// but callers that drag a slider should hold the result in state instead of
     /// recomputing per frame.
-    func evaluate(dataSources: [DataSourceMetadata] = []) -> ComparisonResult? {
+    func evaluate(dataSources: [DataSourceMetadata] = []) -> FuelSmartCore.ComparisonResult? {
         guard let scenario = makeScenario() else { return nil }
         return engine.evaluate(scenario, dataSources: dataSources)
     }

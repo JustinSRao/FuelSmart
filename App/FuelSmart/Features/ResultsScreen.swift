@@ -53,7 +53,7 @@ struct ResultsScreen: View {
         return updated
     }
 
-    private var result: ComparisonResult {
+    private var result: FuelSmartCore.ComparisonResult {
         engine.evaluate(activeScenario, dataSources: dataSources)
     }
 
@@ -108,7 +108,7 @@ struct ResultsScreen: View {
     // MARK: - Layouts
 
     /// iPhone reads results top to bottom.
-    private func compactLayout(_ result: ComparisonResult) -> some View {
+    private func compactLayout(_ result: FuelSmartCore.ComparisonResult) -> some View {
         VStack(alignment: .leading, spacing: 13) {
             vehicleHeader(result)
             horizonPicker
@@ -123,7 +123,7 @@ struct ResultsScreen: View {
 
     /// On a larger canvas the two vehicles become true columns, the chart spans
     /// both, and assumptions move into a persistent inspector.
-    private func wideLayout(_ result: ComparisonResult) -> some View {
+    private func wideLayout(_ result: FuelSmartCore.ComparisonResult) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             vehicleHeader(result)
             HStack(alignment: .top, spacing: 16) {
@@ -145,7 +145,7 @@ struct ResultsScreen: View {
 
     // MARK: - Sections
 
-    private func vehicleHeader(_ result: ComparisonResult) -> some View {
+    private func vehicleHeader(_ result: FuelSmartCore.ComparisonResult) -> some View {
         HStack(alignment: .top, spacing: 10) {
             vehicleColumn(result.sideA, total: result.totalA, isAccented: false)
             Text("VS")
@@ -204,7 +204,7 @@ struct ResultsScreen: View {
         )
     }
 
-    private func chartCard(_ result: ComparisonResult) -> some View {
+    private func chartCard(_ result: FuelSmartCore.ComparisonResult) -> some View {
         FSCard {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .firstTextBaseline) {
@@ -224,7 +224,7 @@ struct ResultsScreen: View {
         }
     }
 
-    private func breakEvenCard(_ result: ComparisonResult) -> some View {
+    private func breakEvenCard(_ result: FuelSmartCore.ComparisonResult) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             FSInsightCard(
                 kind: result.breakEven.status == .breakEvenOccurs ? .finding : .caveat,
@@ -273,7 +273,7 @@ struct ResultsScreen: View {
         }
     }
 
-    private func headlineCard(_ result: ComparisonResult) -> some View {
+    private func headlineCard(_ result: FuelSmartCore.ComparisonResult) -> some View {
         FSCard {
             VStack(alignment: .leading, spacing: 12) {
                 FSSectionLabel("Over \(Int(horizon.years)) years · \(formatter.distance(result.assumptions.annualKilometres))/year")
@@ -321,7 +321,7 @@ struct ResultsScreen: View {
         }
     }
 
-    private func navigationLinks(_ result: ComparisonResult) -> some View {
+    private func navigationLinks(_ result: FuelSmartCore.ComparisonResult) -> some View {
         VStack(spacing: 10) {
             NavigationLink {
                 CostDetailScreen(result: result)
@@ -363,7 +363,7 @@ struct ResultsScreen: View {
         }
     }
 
-    private func assumptionsFooter(_ result: ComparisonResult) -> some View {
+    private func assumptionsFooter(_ result: FuelSmartCore.ComparisonResult) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             FSSectionLabel("Assumptions")
             Text(narrator.assumptionsLine(for: result))
@@ -386,14 +386,14 @@ struct ResultsScreen: View {
 
     // MARK: - Saving
 
-    private func beginSave(_ result: ComparisonResult) {
+    private func beginSave(_ result: FuelSmartCore.ComparisonResult) {
         saveName = draft?.name.isEmpty == false
             ? draft!.name
             : "\(result.sideA.vehicle.shortDisplayName) vs \(result.sideB.vehicle.shortDisplayName)"
         showingSave = true
     }
 
-    private func saveSheet(_ result: ComparisonResult) -> some View {
+    private func saveSheet(_ result: FuelSmartCore.ComparisonResult) -> some View {
         NavigationStack {
             Form {
                 Section("Name") {
