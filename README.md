@@ -28,37 +28,38 @@ the better financial choice. It shows the mathematics and lets you decide.
 | Design system | **Complete** — Nocturne tokens, components, light + dark |
 | SwiftUI application | **Complete** — onboarding, home, compare flow, picker, detail, results, Scenario Lab, thresholds, saved library, settings, share, PDF |
 | Python pipeline tests | **Passing** — 36/36 |
-| Swift test suites | **Written, not yet run** — see below |
+| Swift engine tests | **Passing** — 89/89 across 7 suites |
+| App build | **Compiles on iOS and macOS** in CI |
 
-> ### Build environment note — read this first
+> ### Build environment note
 >
-> This repository was authored on Windows, where no Swift toolchain or Xcode
-> exists. **The Swift sources and tests have never been compiled or executed.**
-> Expect to fix compile errors on the first build; that pass has not happened.
+> This repository is authored on Windows, where no Swift toolchain exists. The
+> compile and test loop runs on GitHub's macOS runners instead — see
+> [`Documentation/Releasing.md`](Documentation/Releasing.md).
 >
-> What *was* verified, and how:
+> Current CI state:
 >
-> * The Python ingestion pipeline was run end to end against the real NRCan and
->   EPA downloads, and its 36 tests pass.
-> * Every numeric constant asserted in the Swift tests was computed by an
->   independent reference implementation of the same model, not copied from a
->   run. That cross-check caught two real bugs: an inverted "which vehicle is
->   catching up" branch in `BreakEvenCalculator`, and a backwards Imperial-vs-US
->   MPG assertion.
-> * The live NHTSA vPIC endpoint and the VIN check-digit algorithm were verified
->   against known VINs.
-> * The Swift sources were reviewed for constructs that cannot compile — tuple
->   key paths in `ForEach`, the iOS 18-only `#Index` macro, and
->   `horizontalSizeClass` on macOS were all found and fixed — but a review is not
->   a compiler.
+> | Job | Result |
+> |---|---|
+> | Core package (`swift build` + `swift test`) | 89/89 tests passing |
+> | App build, iOS | compiles |
+> | App build, macOS | compiles |
+> | Data pipeline | 36/36 tests passing |
 >
-> First thing to run on a Mac:
+> The first CI run surfaced ~400 errors from a single cause — the
+> `InternalImportsByDefault` upcoming feature, which makes `import Foundation`
+> internal and so rejects every public signature built from `Date`, `UUID` or
+> `Bundle`. The rest were a handful of genuine mistakes: `Result<_, String>`
+> (`String` is not an `Error`), a `??` chain past the type-checker's budget, a
+> name collision with **Foundation's own** `ComparisonResult`, a non-`Sendable`
+> `Schema` static, a macOS-only `List` initialiser, a declaration inside a
+> `ViewBuilder`, and `self` captured before initialisation.
 >
-> ```bash
-> cd Packages/FuelSmartCore && swift test
-> ```
->
-> That exercises the entire financial model with no Xcode project required.
+> Numeric constants in the Swift tests were derived from an independent
+> reference implementation rather than recorded from a run. That cross-check
+> caught two real bugs before any compiler did: an inverted "which vehicle is
+> catching up" branch in `BreakEvenCalculator`, and a backwards Imperial-vs-US
+> MPG assertion.
 
 ---
 
