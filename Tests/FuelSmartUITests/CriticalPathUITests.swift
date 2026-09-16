@@ -42,11 +42,20 @@ final class CriticalPathUITests: XCTestCase {
     }
 
     /// Any element whose label matches, regardless of element type.
+    ///
+    /// Scrolls if the element is not found immediately. SwiftUI's `Form` and
+    /// `List` are lazy: a row below the fold genuinely does not exist in the
+    /// accessibility hierarchy until it is scrolled into view, so a query alone
+    /// cannot find it however long it waits.
     private func element(labelled predicate: String, timeout: TimeInterval = 8) -> XCUIElement? {
-        let match = app.descendants(matching: .any)
-            .matching(NSPredicate(format: predicate))
-            .firstMatch
-        return match.waitForExistence(timeout: timeout) ? match : nil
+        let query = app.descendants(matching: .any).matching(NSPredicate(format: predicate))
+        if query.firstMatch.waitForExistence(timeout: timeout) { return query.firstMatch }
+
+        for _ in 0..<6 {
+            app.swipeUp()
+            if query.firstMatch.waitForExistence(timeout: 1) { return query.firstMatch }
+        }
+        return nil
     }
 
     /// Tap the first element matching `predicate`, failing with the element tree
