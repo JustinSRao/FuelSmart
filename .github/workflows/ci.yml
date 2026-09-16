@@ -89,7 +89,7 @@ jobs:
       matrix:
         include:
           - platform: iOS
-            destination: "platform=iOS Simulator,name=iPhone 16,OS=latest"
+            destination: "generic/platform=iOS Simulator"
           - platform: macOS
             destination: "platform=macOS"
     steps:
