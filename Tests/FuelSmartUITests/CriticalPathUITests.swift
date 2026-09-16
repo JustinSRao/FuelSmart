@@ -13,7 +13,12 @@ final class CriticalPathUITests: XCTestCase {
 
     private var app: XCUIApplication!
 
-    override func setUp() {
+    /// Launch the app for one test.
+    ///
+    /// Not a `setUp()` override: `XCTestCase.setUp()` is nonisolated and an
+    /// override cannot add actor isolation, so it cannot touch the
+    /// @MainActor-isolated XCUIApplication. Each test calls this first instead.
+    private func launch() {
         continueAfterFailure = false
         app = XCUIApplication()
         app.launchEnvironment["FUELSMART_UITEST"] = "1"
@@ -60,11 +65,13 @@ final class CriticalPathUITests: XCTestCase {
     // MARK: - Tests
 
     func testLaunchShowsHomeWithTwoWaysIn() {
+        launch()
         XCTAssertTrue(app.buttons["Compare vehicles"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["Keep vs replace"].exists)
     }
 
     func testFullComparisonFlowProducesAResult() throws {
+        launch()
         app.buttons["Compare vehicles"].tap()
 
         // Vehicle A.
@@ -93,6 +100,7 @@ final class CriticalPathUITests: XCTestCase {
     }
 
     func testHorizonChangeUpdatesTheResult() throws {
+        launch()
         app.buttons["Compare vehicles"].tap()
         XCTAssertTrue(tapFirstMatch("label CONTAINS 'Choose a vehicle'"))
         chooseVehicle(searching: "Camry")
@@ -108,6 +116,7 @@ final class CriticalPathUITests: XCTestCase {
     }
 
     func testSaveAndReopenAComparison() throws {
+        launch()
         app.buttons["Compare vehicles"].tap()
         XCTAssertTrue(tapFirstMatch("label CONTAINS 'Choose a vehicle'"))
         chooseVehicle(searching: "Camry")
@@ -138,6 +147,7 @@ final class CriticalPathUITests: XCTestCase {
     }
 
     func testVehiclePickerSearchIsResponsiveAndRecoversFromNoMatches() {
+        launch()
         app.buttons["Compare vehicles"].tap()
         XCTAssertTrue(tapFirstMatch("label CONTAINS 'Choose a vehicle'"))
 
@@ -157,6 +167,7 @@ final class CriticalPathUITests: XCTestCase {
     }
 
     func testSettingsExposeDataSourcesAndPrivacy() {
+        launch()
         app.tabBars.buttons["Settings"].tap()
 
         let sources = app.buttons.matching(
