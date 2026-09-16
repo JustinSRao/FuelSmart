@@ -32,8 +32,11 @@ let package = Package(
         ),
         .testTarget(
             name: "FuelSmartCoreTests",
-            dependencies: ["FuelSmartCore"],
-            resources: [.process("Fixtures")]
+            dependencies: ["FuelSmartCore"]
+            // No `resources:` entry: the fixtures are Swift values in
+            // Fixtures.swift, deliberately hand-written rather than loaded from
+            // a bundled file, so no test can fail because a government dataset
+            // was republished.
         ),
     ]
 )
