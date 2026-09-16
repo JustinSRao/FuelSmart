@@ -1,0 +1,43 @@
+# ── Xcode / Swift ─────────────────────────────────────────────────────────
+# The project file is generated from project.yml by XcodeGen.
+FuelSmart.xcodeproj/
+build/
+DerivedData/
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+xcuserdata/
+*.xcuserstate
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+.swiftpm/
+Packages/*/.build/
+.build/
+
+# ── Raw government downloads ──────────────────────────────────────────────
+# Reproducible at any time with Scripts/fetch_datasets.py, and large.
+# GeneratedData/ IS committed: it is what the app bundles.
+DataSources/
+
+# ── Python ────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# ── Secrets ───────────────────────────────────────────────────────────────
+# FuelSmart requires no API keys. These patterns exist so that an accidental
+# local credential file can never become a commit.
+*.env
+.env.*
+secrets.json
+*.p12
+*.mobileprovision
+*.cer
+
+# ── OS noise ──────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db

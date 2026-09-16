@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "comment": "Official, free, government-published vehicle efficiency datasets. No API keys. No commercial services. Every URL below is a direct machine-readable download published by the issuing government; FuelSmart never scrapes HTML.",
+  "sources": [
+    {
+      "id": "nrcan-conventional",
+      "country": "CA",
+      "publisher": "Natural Resources Canada",
+      "dataset": "Fuel Consumption Ratings",
+      "licence": "Open Government Licence - Canada",
+      "licenceUrl": "https://open.canada.ca/en/open-government-licence-canada",
+      "landingPage": "https://open.canada.ca/data/en/dataset/98f1a129-f628-4ce4-b24d-6f16bf24dd64",
+      "encoding": "cp1252",
+      "kind": "conventional",
+      "urls": [
+        "https://open.canada.ca/data/dataset/98f1a129-f628-4ce4-b24d-6f16bf24dd64/resource/9df1b18d-d036-4783-a61c-99f1f75b3ac5/download/my2026-fuel-consumption-ratings.csv",
+        "https://open.canada.ca/data/dataset/98f1a129-f628-4ce4-b24d-6f16bf24dd64/resource/d589f2bc-9a85-4f65-be2f-20f17debfcb1/download/my2025-fuel-consumption-ratings.csv",
+        "https://open.canada.ca/data/dataset/98f1a129-f628-4ce4-b24d-6f16bf24dd64/resource/c98b9dc8-b23f-4cd8-8b19-e892da1e4688/download/my2015-2024-fuel-consumption-ratings.csv"
+      ]
+    },
+    {
+      "id": "nrcan-bev",
+      "country": "CA",
+      "publisher": "Natural Resources Canada",
+      "dataset": "Fuel Consumption Ratings - Battery-Electric Vehicles",
+      "licence": "Open Government Licence - Canada",
+      "licenceUrl": "https://open.canada.ca/en/open-government-licence-canada",
+      "landingPage": "https://open.canada.ca/data/en/dataset/98f1a129-f628-4ce4-b24d-6f16bf24dd64",
+      "encoding": "cp1252",
+      "kind": "bev",
+      "urls": [
+        "https://open.canada.ca/data/dataset/98f1a129-f628-4ce4-b24d-6f16bf24dd64/resource/026e45b4-eb63-451f-b34f-d9308ea3a3d9/download/my2012-2026-battery-electric-vehicles.csv"
+      ]
+    },
+    {
+      "id": "nrcan-phev",
+      "country": "CA",
+      "publisher": "Natural Resources Canada",
+      "dataset": "Fuel Consumption Ratings - Plug-in Hybrid Electric Vehicles",
+      "licence": "Open Government Licence - Canada",
+      "licenceUrl": "https://open.canada.ca/en/open-government-licence-canada",
+      "landingPage": "https://open.canada.ca/data/en/dataset/98f1a129-f628-4ce4-b24d-6f16bf24dd64",
+      "encoding": "cp1252",
+      "kind": "phev",
+      "urls": [
+        "https://open.canada.ca/data/dataset/98f1a129-f628-4ce4-b24d-6f16bf24dd64/resource/8812228b-a6aa-4303-b3d0-66489225120d/download/my2012-2026-plug-in-hybrid-electric-vehicles.csv"
+      ]
+    },
+    {
+      "id": "epa-vehicles",
+      "country": "US",
+      "publisher": "U.S. Department of Energy / U.S. Environmental Protection Agency",
+      "dataset": "FuelEconomy.gov Vehicle Data",
+      "licence": "U.S. Government Work (public domain)",
+      "licenceUrl": "https://www.fueleconomy.gov/feg/ws/index.shtml",
+      "landingPage": "https://www.fueleconomy.gov/feg/download.shtml",
+      "encoding": "utf-8",
+      "kind": "epa",
+      "urls": [
+        "https://www.fueleconomy.gov/feg/epadata/vehicles.csv"
+      ]
+    }
+  ],
+  "vinDecoder": {
+    "id": "nhtsa-vpic",
+    "publisher": "U.S. National Highway Traffic Safety Administration",
+    "dataset": "vPIC VIN Decoder API",
+    "licence": "U.S. Government Work (public domain)",
+    "endpoint": "https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/{vin}?format=json",
+    "requiresKey": false,
+    "comment": "Optional enhancement only. VIN decoding failure must never block manual vehicle selection."
+  }
+}

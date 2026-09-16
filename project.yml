@@ -1,0 +1,101 @@
+# XcodeGen project definition.
+#
+# An .xcodeproj is a large generated artefact that merges badly and is painful to
+# hand-author. This file is the source of truth instead; run:
+#
+#     brew install xcodegen
+#     xcodegen generate
+#     open FuelSmart.xcodeproj
+#
+# The generated project is intentionally gitignored.
+
+name: FuelSmart
+options:
+  bundleIdPrefix: com.fuelsmart
+  deploymentTarget:
+    iOS: "17.0"
+    macOS: "14.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    # The core package is strictly concurrency-checked; the app follows.
+    SWIFT_STRICT_CONCURRENCY: complete
+    MARKETING_VERSION: "2.0"
+    CURRENT_PROJECT_VERSION: "1"
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    DEAD_CODE_STRIPPING: YES
+    CLANG_ENABLE_MODULE_VERIFIER: NO
+
+packages:
+  FuelSmartCore:
+    path: Packages/FuelSmartCore
+
+targets:
+  FuelSmart:
+    type: application
+    # One target for every platform: the app is adaptive, not three apps.
+    supportedDestinations: [iOS, iPadOS, macOS]
+    sources:
+      - path: App/FuelSmart
+      # The bundled vehicle database. Without these the app has no data, so they
+      # are a first-class resource rather than an optional extra.
+      - path: GeneratedData/vehicles-CA.json
+        buildPhase: resources
+      - path: GeneratedData/vehicles-US.json
+        buildPhase: resources
+      - path: GeneratedData/catalog-CA.json
+        buildPhase: resources
+      - path: GeneratedData/catalog-US.json
+        buildPhase: resources
+      - path: GeneratedData/manifest.json
+        buildPhase: resources
+    dependencies:
+      - package: FuelSmartCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.fuelsmart.app
+        PRODUCT_NAME: FuelSmart
+        INFOPLIST_FILE: App/FuelSmart/Resources/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        # Signing is resolved by the CI workflow via an App Store Connect API
+        # key, so no certificate or profile is committed to the repository.
+        CODE_SIGN_STYLE: Automatic
+        ENABLE_HARDENED_RUNTIME: YES
+        CODE_SIGN_ENTITLEMENTS: App/FuelSmart/Resources/FuelSmart.entitlements
+        # Universal on the Mac, portrait-and-landscape on iPad.
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SUPPORTS_MACCATALYST: NO
+
+  FuelSmartUITests:
+    type: bundle.ui-testing
+    supportedDestinations: [iOS, iPadOS, macOS]
+    sources: [Tests/FuelSmartUITests]
+    dependencies:
+      - target: FuelSmart
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.fuelsmart.app.uitests
+
+schemes:
+  FuelSmart:
+    build:
+      targets:
+        FuelSmart: all
+        FuelSmartUITests: [test]
+    test:
+      gatherCoverageData: true
+      targets:
+        - FuelSmartUITests
+        # The calculation engine's own suite, run from the app scheme so one
+        # test action covers both layers.
+        - package: FuelSmartCore/FuelSmartCoreTests
+    run:
+      environmentVariables:
+        # Lets UI tests start from a clean, deterministic state.
+        - variable: FUELSMART_UITEST
+          value: "1"
+          isEnabled: false

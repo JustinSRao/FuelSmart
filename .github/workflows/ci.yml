@@ -1,0 +1,167 @@
+name: CI
+
+# The compile gate. This repository was authored without a Swift toolchain, so
+# this workflow is the first thing that ever type-checks the app. Run it before
+# attempting a TestFlight build: an archive is a superset of everything here, and
+# failing fast on a 5-minute job beats failing slowly on a signed one.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # The financial model on its own: no Xcode project, no simulator, no signing.
+  # Fastest possible signal on whether the engine is sound.
+  core:
+    name: Core package
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          # The runner's default Xcode is always current; pinning an exact
+          # point-release path breaks whenever the image is updated.
+          sudo xcode-select -switch /Applications/Xcode.app
+          xcodebuild -version
+          swift --version
+
+      - name: Build FuelSmartCore
+        working-directory: Packages/FuelSmartCore
+        run: swift build -v
+
+      - name: Test FuelSmartCore
+        working-directory: Packages/FuelSmartCore
+        run: swift test -v
+
+  # The data pipeline. Runs on Linux because it is pure standard-library Python
+  # and does not need a Mac.
+  pipeline:
+    name: Data pipeline
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run pipeline tests
+        run: python Scripts/test_pipeline.py
+
+      - name: Verify the bundled dataset is present and well formed
+        run: |
+          python - <<'PY'
+          import json, os, sys
+          required = [
+              "GeneratedData/manifest.json",
+              "GeneratedData/vehicles-CA.json",
+              "GeneratedData/vehicles-US.json",
+              "GeneratedData/catalog-CA.json",
+              "GeneratedData/catalog-US.json",
+          ]
+          for path in required:
+              if not os.path.exists(path):
+                  sys.exit(f"missing bundled dataset: {path}")
+          manifest = json.load(open("GeneratedData/manifest.json", encoding="utf-8"))
+          total = sum(c["recordCount"] for c in manifest["countries"])
+          print(f"dataset {manifest['datasetVersion']}: {total:,} records")
+          if total < 10_000:
+              sys.exit("bundled dataset looks truncated")
+          PY
+
+  # The app itself, for both platforms. Unsigned: this only answers "does it
+  # compile and link", which is the question that matters right now.
+  app:
+    name: App (${{ matrix.platform }})
+    runs-on: macos-15
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: iOS
+            destination: "platform=iOS Simulator,name=iPhone 16,OS=latest"
+          - platform: macOS
+            destination: "platform=macOS"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          # The runner's default Xcode is always current; pinning an exact
+          # point-release path breaks whenever the image is updated.
+          sudo xcode-select -switch /Applications/Xcode.app
+          xcodebuild -version
+          swift --version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate the Xcode project
+        run: xcodegen generate
+
+      - name: Build
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project FuelSmart.xcodeproj \
+            -scheme FuelSmart \
+            -destination '${{ matrix.destination }}' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            | xcbeautify || xcodebuild build \
+            -project FuelSmart.xcodeproj \
+            -scheme FuelSmart \
+            -destination '${{ matrix.destination }}' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO
+
+  # The critical path through the real UI, on a simulator.
+  ui-tests:
+    name: UI tests
+    runs-on: macos-15
+    timeout-minutes: 45
+    needs: app
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          # The runner's default Xcode is always current; pinning an exact
+          # point-release path breaks whenever the image is updated.
+          sudo xcode-select -switch /Applications/Xcode.app
+          xcodebuild -version
+          swift --version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate the Xcode project
+        run: xcodegen generate
+
+      - name: Run UI tests
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project FuelSmart.xcodeproj \
+            -scheme FuelSmart \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: ~/Library/Developer/Xcode/DerivedData/**/Logs/Test/*.xcresult
+          retention-days: 7

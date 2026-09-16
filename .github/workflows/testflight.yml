@@ -1,0 +1,157 @@
+name: TestFlight
+
+# Archives the app and uploads it to TestFlight.
+#
+# Deliberately manual (`workflow_dispatch`) rather than automatic on push: a
+# TestFlight build consumes a build number, notifies testers, and cannot be
+# unsent. Run CI first — an archive recompiles everything CI already checked, so
+# there is no point paying for signed build minutes to discover a syntax error.
+#
+# ── One-time setup ────────────────────────────────────────────────────────────
+#
+# 1. In App Store Connect → Users and Access → Integrations → App Store Connect
+#    API, create a team key with the "App Manager" role. Download the .p8 once.
+# 2. Register the bundle id `com.fuelsmart.app` and create the app record.
+# 3. Add three repository secrets (Settings → Secrets and variables → Actions):
+#
+#       ASC_KEY_ID         the key's 10-character id
+#       ASC_ISSUER_ID      the issuer UUID shown above the key list
+#       ASC_KEY_P8         the entire contents of the .p8 file, including the
+#                          BEGIN/END PRIVATE KEY lines
+#
+#    These are *your* credentials for talking to Apple. They live in GitHub's
+#    encrypted secret store, never in the repository, and the shipped app
+#    contains no keys of any kind.
+#
+# 4. Set `TEAM_ID` below to your Apple Developer team id.
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: "Build number (must be higher than the last upload)"
+        required: true
+        default: "1"
+      notify_testers:
+        description: "Notify external testers once processed"
+        type: boolean
+        default: false
+
+env:
+  TEAM_ID: ""   # ← set this before the first run
+  BUNDLE_ID: com.fuelsmart.app
+
+jobs:
+  testflight:
+    name: Archive and upload
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fail early if the team id is not set
+        run: |
+          if [ -z "$TEAM_ID" ]; then
+            echo "::error::Set TEAM_ID in .github/workflows/testflight.yml before running."
+            exit 1
+          fi
+
+      - name: Select Xcode
+        run: |
+          # The runner's default Xcode is always current; pinning an exact
+          # point-release path breaks whenever the image is updated.
+          sudo xcode-select -switch /Applications/Xcode.app
+          xcodebuild -version
+          swift --version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate the Xcode project
+        run: xcodegen generate
+
+      # The API key is written to the location xcodebuild looks in, and removed
+      # again in a step that always runs, so it never lingers on the runner.
+      - name: Install the App Store Connect API key
+        run: |
+          mkdir -p ~/private_keys
+          echo "${{ secrets.ASC_KEY_P8 }}" > ~/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+          chmod 600 ~/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+
+      - name: Archive
+        run: |
+          set -o pipefail
+          xcodebuild archive \
+            -project FuelSmart.xcodeproj \
+            -scheme FuelSmart \
+            -destination 'generic/platform=iOS' \
+            -archivePath build/FuelSmart.xcarchive \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8 \
+            -authenticationKeyID ${{ secrets.ASC_KEY_ID }} \
+            -authenticationKeyIssuerID ${{ secrets.ASC_ISSUER_ID }} \
+            DEVELOPMENT_TEAM=$TEAM_ID \
+            CURRENT_PROJECT_VERSION=${{ inputs.build_number }}
+
+      - name: Write export options
+        run: |
+          mkdir -p build
+          cat > build/ExportOptions.plist <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store-connect</string>
+            <key>destination</key>
+            <string>upload</string>
+            <key>teamID</key>
+            <string>${TEAM_ID}</string>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>manageAppVersionAndBuildNumber</key>
+            <false/>
+            <key>testFlightInternalTestingOnly</key>
+            <${{ inputs.notify_testers && 'false' || 'true' }}/>
+          </dict>
+          </plist>
+          PLIST
+          cat build/ExportOptions.plist
+
+      # `destination: upload` in the export options sends the build straight to
+      # App Store Connect, so no separate altool/Transporter step is needed.
+      - name: Export and upload to TestFlight
+        run: |
+          set -o pipefail
+          xcodebuild -exportArchive \
+            -archivePath build/FuelSmart.xcarchive \
+            -exportPath build/export \
+            -exportOptionsPlist build/ExportOptions.plist \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8 \
+            -authenticationKeyID ${{ secrets.ASC_KEY_ID }} \
+            -authenticationKeyIssuerID ${{ secrets.ASC_ISSUER_ID }}
+
+      - name: Remove the API key from the runner
+        if: always()
+        run: rm -rf ~/private_keys
+
+      - name: Upload the archive for debugging
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcarchive
+          path: build/FuelSmart.xcarchive
+          retention-days: 3
+
+      - name: Summary
+        if: success()
+        run: |
+          echo "### Uploaded to TestFlight" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Build **${{ inputs.build_number }}** is processing in App Store Connect." >> $GITHUB_STEP_SUMMARY
+          echo "Processing usually takes 5–15 minutes before it appears to testers." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "FuelSmart collects no data and uses no tracking, so the export" >> $GITHUB_STEP_SUMMARY
+          echo "compliance and privacy answers are the trivial ones — see the" >> $GITHUB_STEP_SUMMARY
+          echo "privacy manifest in Info.plist." >> $GITHUB_STEP_SUMMARY

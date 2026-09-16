@@ -1,0 +1,11 @@
+# Normalise to LF in the repository. The macOS CI runners and Xcode expect LF;
+# authoring happened on Windows, so without this every file would land as CRLF.
+* text=auto eol=lf
+
+# Binary assets must never be line-ending converted.
+*.png binary
+*.jpg binary
+*.pdf binary
+
+# Generated data is committed but is not worth diffing or reviewing by eye.
+GeneratedData/*.json linguist-generated=true -diff
