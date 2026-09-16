@@ -6,6 +6,9 @@ import XCTest
 ///
 /// Written against accessibility identifiers and labels rather than screen
 /// coordinates, so a layout change does not silently break the suite.
+/// XCUIApplication and every element query it returns are @MainActor-isolated,
+/// so under Swift 6 strict concurrency the whole test case must be too.
+@MainActor
 final class CriticalPathUITests: XCTestCase {
 
     private var app: XCUIApplication!
